@@ -19,6 +19,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import static java.net.URLClassLoader.newInstance;
+import static java.util.Collections.emptyList;
 
 /**
  * @goal generate
@@ -44,8 +45,8 @@ public class ArchUnitMojo extends AbstractMojo {
     @Parameter(defaultValue = "false", property = "archunit.skip", required = false)
     private boolean skip;
 
-    @Parameter(property = "projectPath")
-    private String projectPath = "./target";
+    @Parameter(property = "excludedPaths")
+    private List<String> excludedPaths  = emptyList();
 
     @Parameter(property = "rules")
     private MavenRules rules;
@@ -82,9 +83,9 @@ public class ArchUnitMojo extends AbstractMojo {
         try {
             configureContextClassLoader();
 
-            ruleInvokerService = new RuleInvokerService(new MavenLogAdapter(getLog()),new MavenScopePathProvider());
+            ruleInvokerService = new RuleInvokerService(new MavenLogAdapter(getLog()), new MavenScopePathProvider(mavenProject), excludedPaths);
 
-            ruleFailureMessage = ruleInvokerService.invokeRules(coreRules, projectPath);
+            ruleFailureMessage = ruleInvokerService.invokeRules(coreRules);
         } catch (final Exception e) {
             throw new MojoFailureException(e.getMessage(), e);
         }

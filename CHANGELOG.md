@@ -12,6 +12,42 @@
 
 ### Fixed
 
+## [2.7.2] - 2021-02-03
+
+### Changed
+
+- Upgrading to arch-unit-build-plugin-core 2.7.2
+
+## [2.7.1] - 2021-01-27
+
+### Changed
+
+- Upgrading to arch-unit-build-plugin-core 2.7.1
+
+## [2.7.0] - 2021-01-22
+
+### Changed
+
+- PR #42 - Upgrading to arch-unit-build-plugin-core 2.7.0 for Java 15 compatibility
+
+## [2.6.2] - 2020-09-21
+
+### Changed
+- PR #39 - Now getting the main and test values in MavenScopePathProvider from Maven project variable, instead of hardcoding it
+
+
+## [2.6.1] - 2020-08-20
+
+### Changed
+- PR #38 - Breaking change : "projectPath" is not a valid property anymore. since we are in Maven context, we're using MavenScopePathProvider which provides the required values
+- upgrading to arch-unit-core 2.6.1
+
+
+## [2.4.0] - 2020-03-23
+
+### Changed
+- using latest Mockito so that it runs fine with JDK 11
+- upgrading Archunit plugin core to 2.5.1 : now can configure excludedPaths
 
 ## [2.3.0] - 2019-10-06
 

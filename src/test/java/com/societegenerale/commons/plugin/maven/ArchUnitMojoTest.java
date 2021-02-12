@@ -1,26 +1,19 @@
 package com.societegenerale.commons.plugin.maven;
 
-import static com.tngtech.junit.dataprovider.DataProviders.testForEach;
-import static java.util.Arrays.stream;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.google.common.collect.ImmutableSet;
-import com.societegenerale.aut.test.TestClassWithPowerMock;
-import com.societegenerale.commons.plugin.rules.MyCustomRules;
-import com.societegenerale.commons.plugin.rules.NoPowerMockRuleTest;
-import com.tngtech.java.junit.dataprovider.DataProvider;
-import com.tngtech.java.junit.dataprovider.DataProviderRunner;
-import com.tngtech.java.junit.dataprovider.UseDataProvider;
 import java.io.File;
 import java.io.StringReader;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.ImmutableSet;
+import com.societegenerale.aut.test.TestClassWithPowerMock;
+import com.societegenerale.commons.plugin.rules.MyCustomAndDummyRules;
+import com.societegenerale.commons.plugin.rules.NoPowerMockRuleTest;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
+import org.apache.maven.model.Build;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.testing.MojoRule;
@@ -39,6 +32,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+
+import static com.tngtech.junit.dataprovider.DataProviders.testForEach;
+import static java.util.Arrays.stream;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(DataProviderRunner.class)
 public class ArchUnitMojoTest {
@@ -79,6 +81,12 @@ public class ArchUnitMojoTest {
   @Before
   public void setUp() throws Exception {
 
+    Build mockBuild = mock(Build.class);
+
+    when(mavenProject.getBuild()).thenReturn(mockBuild);
+    when(mockBuild.getOutputDirectory()).thenReturn("target/classes");
+    when(mockBuild.getTestOutputDirectory()).thenReturn("target/test-classes");
+
     pluginConfiguration = mojoRule.extractPluginConfiguration("arch-unit-maven-plugin", Xpp3DomBuilder.build(new StringReader(pomWithNoRule)));
   }
 
@@ -94,8 +102,6 @@ public class ArchUnitMojoTest {
 
   @Test
   public void shouldExecuteSinglePreconfiguredRule() throws Exception {
-
-    pluginConfiguration.getChild("projectPath").setValue("./target/aut-target/test-classes/com/societegenerale/aut/test");
 
     // add single rule
     PlexusConfiguration preConfiguredRules = pluginConfiguration.getChild("rules").getChild("preConfiguredRules");
@@ -113,7 +119,7 @@ public class ArchUnitMojoTest {
     PlexusConfiguration configurableRule = new DefaultPlexusConfiguration("configurableRule");
 
     String missingCheck = "notThere";
-    String ruleClass = MyCustomRules.class.getName();
+    String ruleClass = MyCustomAndDummyRules.class.getName();
 
     configurableRule.addChild("rule", ruleClass);
     configurableRule.addChild(buildChecksBlock(missingCheck));
@@ -137,7 +143,7 @@ public class ArchUnitMojoTest {
 
     PlexusConfiguration configurableRule = new DefaultPlexusConfiguration("configurableRule");
 
-    configurableRule.addChild("rule", MyCustomRules.class.getName());
+    configurableRule.addChild("rule", MyCustomAndDummyRules.class.getName());
     configurableRule.addChild(buildChecksBlock(checkName));
     configurableRule.addChild(buildApplyOnBlock("com.societegenerale.aut.test.specificCase", "test"));
 
@@ -155,7 +161,7 @@ public class ArchUnitMojoTest {
 
     PlexusConfiguration configurableRule = new DefaultPlexusConfiguration("configurableRule");
 
-    configurableRule.addChild("rule", MyCustomRules.class.getName());
+    configurableRule.addChild("rule", MyCustomAndDummyRules.class.getName());
     configurableRule.addChild(buildApplyOnBlock("com.societegenerale.aut.test.specificCase", "test"));
 
     PlexusConfiguration configurableRules = pluginConfiguration.getChild("rules").getChild("configurableRules");
@@ -176,7 +182,7 @@ public class ArchUnitMojoTest {
 
     PlexusConfiguration configurableRule = new DefaultPlexusConfiguration("configurableRule");
 
-    configurableRule.addChild("rule", MyCustomRules.class.getName());
+    configurableRule.addChild("rule", MyCustomAndDummyRules.class.getName());
     configurableRule.addChild(buildChecksBlock("annotatedWithTest_asField"));
     configurableRule.addChild(buildApplyOnBlock("com.societegenerale.aut.test.specificCase", "test"));
 
@@ -198,7 +204,7 @@ public class ArchUnitMojoTest {
 
     PlexusConfiguration configurableRule = new DefaultPlexusConfiguration("configurableRule");
 
-    configurableRule.addChild("rule", MyCustomRules.class.getName());
+    configurableRule.addChild("rule", MyCustomAndDummyRules.class.getName());
     configurableRule.addChild(buildChecksBlock("annotatedWithTest_asField"));
     configurableRule.addChild(buildApplyOnBlock("com.societegenerale.commons.plugin.rules.classesForTests.specificCase", "test"));
 
@@ -235,7 +241,6 @@ public class ArchUnitMojoTest {
     File testPom = new File(getBasedir(), "target/test-classes/unit/plugin-config.xml");
     ArchUnitMojo archUnitMojo = (ArchUnitMojo) mojoRule.lookupMojo("arch-test", testPom);
 
-    MavenProject mavenProject = mock(MavenProject.class);
     when(mavenProject.getPackaging()).thenReturn("pom");
 
     mojoRule.setVariableValueToObject(archUnitMojo, "mavenProject", mavenProject);
